@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { message } from 'antd';
 import {
   OpenDrawerButton,
   PlayerTag,
@@ -9,8 +10,34 @@ import PlayerEditDrawer from '../PlayerEditDrawer/PlayerEditDrawer';
 
 function PlayerCard() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [players, setPlayers] = useState([
+    'Người chơi 1',
+    'Người chơi 2',
+    'Người chơi 3',
+  ]);
 
-  const players = ['Người chơi 1', 'Người chơi 2', 'Người chơi 3'];
+  const handlePlayerNameChange = (index: number, nextName: string) => {
+    setPlayers((prevPlayers) =>
+      prevPlayers.map((player, playerIndex) =>
+        playerIndex === index ? nextName : player,
+      ),
+    );
+  };
+
+  const handleRemovePlayer = (index: number) => {
+    setPlayers((prevPlayers) => {
+      if (prevPlayers.length <= 3) {
+        message.warning('Bạn cần ít nhất 3 người chơi để bắt đầu game');
+        return prevPlayers;
+      }
+
+      return prevPlayers.filter((_, playerIndex) => playerIndex !== index);
+    });
+  };
+
+  const handleAddPlayer = (playerName: string) => {
+    setPlayers((prevPlayers) => [...prevPlayers, playerName]);
+  };
 
   return (
     <>
@@ -23,8 +50,8 @@ function PlayerCard() {
         }
       >
         <PlayerTags>
-          {players.map((player) => (
-            <PlayerTag key={player}>{player}</PlayerTag>
+          {players.map((player, index) => (
+            <PlayerTag key={`${player}-${index}`}>{player}</PlayerTag>
           ))}
         </PlayerTags>
       </StyledPlayerCard>
@@ -32,6 +59,10 @@ function PlayerCard() {
       <PlayerEditDrawer
         open={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
+        players={players}
+        onPlayerNameChange={handlePlayerNameChange}
+        onRemovePlayer={handleRemovePlayer}
+        onAddPlayer={handleAddPlayer}
       />
     </>
   );
