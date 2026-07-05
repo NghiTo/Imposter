@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { message } from 'antd';
 import {
   OpenDrawerButton,
   PlayerTag,
@@ -8,36 +7,20 @@ import {
 } from './PlayerCard.style';
 import PlayerEditDrawer from '../PlayerEditDrawer/PlayerEditDrawer';
 
-function PlayerCard() {
+type PlayerCardProps = {
+  players: string[];
+  onPlayerNameChange: (index: number, nextName: string) => void;
+  onRemovePlayer: (index: number) => void;
+  onAddPlayer: (playerName: string) => void;
+};
+
+function PlayerCard({
+  players,
+  onPlayerNameChange,
+  onRemovePlayer,
+  onAddPlayer,
+}: PlayerCardProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [players, setPlayers] = useState([
-    'Người chơi 1',
-    'Người chơi 2',
-    'Người chơi 3',
-  ]);
-
-  const handlePlayerNameChange = (index: number, nextName: string) => {
-    setPlayers((prevPlayers) =>
-      prevPlayers.map((player, playerIndex) =>
-        playerIndex === index ? nextName : player,
-      ),
-    );
-  };
-
-  const handleRemovePlayer = (index: number) => {
-    setPlayers((prevPlayers) => {
-      if (prevPlayers.length <= 3) {
-        message.warning('Bạn cần ít nhất 3 người chơi để bắt đầu game');
-        return prevPlayers;
-      }
-
-      return prevPlayers.filter((_, playerIndex) => playerIndex !== index);
-    });
-  };
-
-  const handleAddPlayer = (playerName: string) => {
-    setPlayers((prevPlayers) => [...prevPlayers, playerName]);
-  };
 
   return (
     <>
@@ -60,9 +43,9 @@ function PlayerCard() {
         open={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         players={players}
-        onPlayerNameChange={handlePlayerNameChange}
-        onRemovePlayer={handleRemovePlayer}
-        onAddPlayer={handleAddPlayer}
+        onPlayerNameChange={onPlayerNameChange}
+        onRemovePlayer={onRemovePlayer}
+        onAddPlayer={onAddPlayer}
       />
     </>
   );
