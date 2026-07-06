@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Drawer } from 'antd';
+import { useEffect, useState } from 'react';
+import { Drawer, message } from 'antd';
 import { CloseOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   ActionSection,
@@ -22,20 +22,24 @@ type PlayerEditDrawerProps = {
   open: boolean;
   onClose: () => void;
   players: string[];
-  onPlayerNameChange: (index: number, nextName: string) => void;
-  onRemovePlayer: (index: number) => void;
-  onAddPlayer: (playerName: string) => void;
+  onConfirmPlayers: (nextPlayers: string[]) => void;
 };
 
 function PlayerEditDrawer({
   open,
   onClose,
   players,
-  onPlayerNameChange,
-  onRemovePlayer,
-  onAddPlayer,
+  onConfirmPlayers,
 }: PlayerEditDrawerProps) {
+  const [localPlayers, setLocalPlayers] = useState(players);
   const [newPlayerName, setNewPlayerName] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      setLocalPlayers(players);
+      setNewPlayerName('');
+    }
+  }, [open, players]);
 
   const trimmedNewPlayerName = newPlayerName.trim();
 
@@ -44,8 +48,57 @@ function PlayerEditDrawer({
       return;
     }
 
-    onAddPlayer(trimmedNewPlayerName);
+    const hasDuplicateName = localPlayers.some(
+      (player) => player.trim().toLowerCase() === trimmedNewPlayerName.toLowerCase(),
+    );
+
+    if (hasDuplicateName) {
+      message.warning('Tên người chơi không được trùng nhau');
+      return;
+    }
+
+    setLocalPlayers((prevPlayers) => [...prevPlayers, trimmedNewPlayerName]);
     setNewPlayerName('');
+  };
+
+  const handlePlayerNameChange = (index: number, nextName: string) => {
+    setLocalPlayers((prevPlayers) =>
+      prevPlayers.map((player, playerIndex) =>
+        playerIndex === index ? nextName : player,
+      ),
+    );
+  };
+
+  const handleRemovePlayer = (index: number) => {
+    setLocalPlayers((prevPlayers) => {
+      if (prevPlayers.length <= 3) {
+        message.warning('Bạn cần ít nhất 3 người chơi để bắt đầu game');
+        return prevPlayers;
+      }
+
+      return prevPlayers.filter((_, playerIndex) => playerIndex !== index);
+    });
+  };
+
+  const handleConfirm = () => {
+    const normalizedPlayers = localPlayers.map((player) => player.trim());
+    const hasEmptyPlayer = normalizedPlayers.some((player) => player.length === 0);
+    const normalizedNames = normalizedPlayers.map((player) => player.toLowerCase());
+    const hasDuplicatePlayer =
+      new Set(normalizedNames).size !== normalizedNames.length;
+
+    if (hasEmptyPlayer) {
+      message.warning('Tên người chơi không được để trống');
+      return;
+    }
+
+    if (hasDuplicatePlayer) {
+      message.warning('Tên người chơi không được trùng nhau');
+      return;
+    }
+
+    onConfirmPlayers(normalizedPlayers);
+    onClose();
   };
 
   return (
@@ -64,19 +117,17 @@ function PlayerEditDrawer({
 
         <InputSection>
           <InputList>
-            {players.map((player, index) => (
+            {localPlayers.map((player, index) => (
               <InputRow key={`player-${index}`}>
                 <PlayerInput
                   prefix={<EditOutlined />}
                   value={player}
-                  onChange={(event) =>
-                    onPlayerNameChange(index, event.target.value)
-                  }
+                  onChange={(event) => handlePlayerNameChange(index, event.target.value)}
                 />
                 <RemovePlayerButton
                   type="text"
                   aria-label={`Xoa ${player}`}
-                  onClick={() => onRemovePlayer(index)}
+                  onClick={() => handleRemovePlayer(index)}
                   icon={<CloseOutlined />}
                 />
               </InputRow>
@@ -99,7 +150,7 @@ function PlayerEditDrawer({
               onClick={handleAddPlayer}
             />
           </AddPlayerRow>
-          <ConfirmButton type="primary" onClick={onClose}>
+          <ConfirmButton type="primary" onClick={handleConfirm}>
             Xác nhận
           </ConfirmButton>
         </ActionSection>

@@ -9,17 +9,10 @@ import PlayerEditDrawer from '../PlayerEditDrawer/PlayerEditDrawer';
 
 type PlayerCardProps = {
   players: string[];
-  onPlayerNameChange: (index: number, nextName: string) => void;
-  onRemovePlayer: (index: number) => void;
-  onAddPlayer: (playerName: string) => void;
+  onConfirmPlayers: (nextPlayers: string[]) => void;
 };
 
-function PlayerCard({
-  players,
-  onPlayerNameChange,
-  onRemovePlayer,
-  onAddPlayer,
-}: PlayerCardProps) {
+function PlayerCard({ players, onConfirmPlayers }: PlayerCardProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   return (
@@ -43,9 +36,7 @@ function PlayerCard({
         open={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         players={players}
-        onPlayerNameChange={onPlayerNameChange}
-        onRemovePlayer={onRemovePlayer}
-        onAddPlayer={onAddPlayer}
+        onConfirmPlayers={onConfirmPlayers}
       />
     </>
   );
