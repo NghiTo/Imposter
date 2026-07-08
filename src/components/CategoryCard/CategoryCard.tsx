@@ -5,11 +5,15 @@ import {
   StyledCategoryCard,
 } from './CategoryCard.style';
 
-function CategoryCard() {
+type CategoryCardProps = {
+  categoryLabel: string;
+};
+
+function CategoryCard({ categoryLabel }: CategoryCardProps) {
   return (
     <StyledCategoryCard title="Danh mục">
       <CategoryTags>
-        <CategoryTag icon={<HomeOutlined />}>Đồ vật hàng ngày</CategoryTag>
+        <CategoryTag icon={<HomeOutlined />}>{categoryLabel}</CategoryTag>
       </CategoryTags>
     </StyledCategoryCard>
   );

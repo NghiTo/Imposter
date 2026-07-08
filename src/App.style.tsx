@@ -1,9 +1,13 @@
 import styled, { createGlobalStyle } from 'styled-components';
+import { Button } from 'antd';
 
 export const GlobalStyle = createGlobalStyle`
+  @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap');
+
   body {
     margin: 0;
     background: hsl(0deg 0% 93.73%);
+    font-family: 'Chakra Petch', 'Segoe UI', sans-serif;
   }
 
   #root {
@@ -19,6 +23,14 @@ export const AppShell = styled.main`
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  padding: 0;
+`;
+
+export const CardsSection = styled.section`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 16px;
 `;
 
@@ -29,5 +41,12 @@ export const Brand = styled.h1`
   color: hsl(0deg 0% 40%);
   font-size: 2rem;
   letter-spacing: 0.16em;
+  font-weight: 600;
+`;
+
+export const StartGameButton = styled(Button)`
+  width: 90vw;
+  max-width: 430px;
+  height: 44px;
   font-weight: 600;
 `;
