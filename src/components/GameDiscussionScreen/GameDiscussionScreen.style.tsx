@@ -27,6 +27,11 @@ export const Description = styled.p`
   font-size: 1rem;
 `;
 
+export const HighlightName = styled.span`
+  color: hsl(0deg 78% 52%);
+  font-weight: 700;
+`;
+
 export const RevealButton = styled(Button)`
   width: fit-content;
   min-width: 0;

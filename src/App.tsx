@@ -1,11 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AppShell,
   Brand,
   CardsSection,
   GlobalStyle,
+  PasswordField,
+  PasswordGateModal,
+  PasswordSubmitButton,
+  LogoutButton,
   StartGameButton,
 } from './App.style';
+import { Form, message } from 'antd';
 import PlayerCard from './components/PlayerCard/PlayerCard';
 import CategoryCard from './components/CategoryCard/CategoryCard';
 import ImposterCard from './components/ImposterCard/ImposterCard';
@@ -25,7 +30,12 @@ const CATEGORY_SETTINGS: Record<
   },
 };
 
+const PASSWORD_STORAGE_KEY = 'imposter-unlocked';
+
 function App() {
+  const [isUnlocked, setIsUnlocked] = useState(() => {
+    return window.localStorage.getItem(PASSWORD_STORAGE_KEY) === 'true';
+  });
   const [players, setPlayers] = useState([
     'Người chơi 1',
     'Người chơi 2',
@@ -40,10 +50,84 @@ function App() {
   const [discussionStarterName, setDiscussionStarterName] =
     useState('Người chơi 1');
   const [selectedCategory] = useState<CategoryKey>('daily-objects');
+  const [passwordForm] = Form.useForm();
 
   const handleConfirmPlayers = (nextPlayers: string[]) => {
     setPlayers(nextPlayers);
   };
+
+  const handleUnlock = () => {
+    setIsUnlocked(true);
+    window.localStorage.setItem(PASSWORD_STORAGE_KEY, 'true');
+    passwordForm.resetFields();
+    message.success('Đăng nhập thành công');
+  };
+
+  const handleLogout = () => {
+    setIsUnlocked(false);
+    window.localStorage.removeItem(PASSWORD_STORAGE_KEY);
+    setIsGameStarted(false);
+    setIsDiscussionStarted(false);
+    setCurrentPlayerIndex(0);
+    setSecretWord('');
+    setSecretHint('');
+    setImposterPlayerIndex(0);
+    setDiscussionStarterName('Người chơi 1');
+    passwordForm.resetFields();
+  };
+
+  useEffect(() => {
+    if (!isUnlocked) {
+      passwordForm.resetFields();
+    }
+  }, [isUnlocked, passwordForm]);
+
+  if (!isUnlocked) {
+    return (
+      <>
+        <GlobalStyle />
+        <PasswordGateModal
+          open
+          centered
+          closable={false}
+          maskClosable={false}
+          keyboard={false}
+          title="Nhập mật khẩu"
+          footer={null}
+        >
+          <Form
+            form={passwordForm}
+            layout="vertical"
+            onFinish={handleUnlock}
+          >
+            <Form.Item
+              name="password"
+              rules={[
+                { required: true, message: 'Vui lòng nhập mật khẩu' },
+                {
+                  validator: async (_, value: string) => {
+                    if (!value || value === 'rocmanx4') {
+                      return;
+                    }
+
+                    throw new Error('Mật khẩu không đúng');
+                  },
+                },
+              ]}
+              validateTrigger={['onSubmit', 'onBlur']}
+              style={{ marginBottom: 16 }}
+            >
+              <PasswordField placeholder="Nhập mật khẩu để vào game" autoFocus />
+            </Form.Item>
+
+            <PasswordSubmitButton type="primary" htmlType="submit">
+              Vào trang chính
+            </PasswordSubmitButton>
+          </Form>
+        </PasswordGateModal>
+      </>
+    );
+  }
 
   const handleStartGame = () => {
     const currentCategory = CATEGORY_SETTINGS[selectedCategory];
@@ -125,6 +209,7 @@ function App() {
     <>
       <GlobalStyle />
       <AppShell aria-label="Imposter">
+        <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
         <CardsSection>
           <Brand>IMPOSTER</Brand>
           <PlayerCard
