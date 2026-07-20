@@ -16,9 +16,9 @@ import CategoryCard from './components/CategoryCard/CategoryCard';
 import ImposterCard from './components/ImposterCard/ImposterCard';
 import GameRevealScreen from './components/GameRevealScreen/GameRevealScreen';
 import GameDiscussionScreen from './components/GameDiscussionScreen/GameDiscussionScreen';
-import { dailyObjectWordBankVi } from './data/wordBank';
+import { categoryWordBankMapVi } from './data/wordBank';
 
-type CategoryKey = 'daily-objects';
+type CategoryKey = keyof typeof categoryWordBankMapVi;
 
 const CATEGORY_SETTINGS: Record<
   CategoryKey,
@@ -26,9 +26,97 @@ const CATEGORY_SETTINGS: Record<
 > = {
   'daily-objects': {
     label: 'Đồ vật hàng ngày',
-    words: dailyObjectWordBankVi,
+    words: categoryWordBankMapVi['daily-objects'],
+  },
+  celebrities: {
+    label: 'Người nổi tiếng',
+    words: categoryWordBankMapVi.celebrities,
+  },
+  'food-drinks': {
+    label: 'Đồ ăn và thức uống',
+    words: categoryWordBankMapVi['food-drinks'],
+  },
+  animals: {
+    label: 'Động vật',
+    words: categoryWordBankMapVi.animals,
+  },
+  'brands-logos': {
+    label: 'Thương hiệu và logo',
+    words: categoryWordBankMapVi['brands-logos'],
+  },
+  'colors-shapes': {
+    label: 'Màu sắc và hình dạng',
+    words: categoryWordBankMapVi['colors-shapes'],
+  },
+  'countries-cities': {
+    label: 'Quốc gia và thành phố',
+    words: categoryWordBankMapVi['countries-cities'],
+  },
+  'emotions-feelings': {
+    label: 'Cảm xúc và cảm giác',
+    words: categoryWordBankMapVi['emotions-feelings'],
+  },
+  'hobbies-activities': {
+    label: 'Sở thích và hoạt động',
+    words: categoryWordBankMapVi['hobbies-activities'],
+  },
+  'internet-culture': {
+    label: 'Văn hóa internet',
+    words: categoryWordBankMapVi['internet-culture'],
+  },
+  'cooking-kitchen': {
+    label: 'Nấu ăn và nhà bếp',
+    words: categoryWordBankMapVi['cooking-kitchen'],
+  },
+  'movies-tv': {
+    label: 'Phim và chương trình truyền hình',
+    words: categoryWordBankMapVi['movies-tv'],
+  },
+  'music-bands': {
+    label: 'Âm nhạc và ban nhạc',
+    words: categoryWordBankMapVi['music-bands'],
+  },
+  professions: {
+    label: 'Nghề nghiệp',
+    words: categoryWordBankMapVi.professions,
+  },
+  'school-education': {
+    label: 'Trường học và giáo dục',
+    words: categoryWordBankMapVi['school-education'],
+  },
+  'science-technology': {
+    label: 'Khoa học và công nghệ',
+    words: categoryWordBankMapVi['science-technology'],
+  },
+  sports: {
+    label: 'Thể thao',
+    words: categoryWordBankMapVi.sports,
+  },
+  superheroes: {
+    label: 'Siêu anh hùng',
+    words: categoryWordBankMapVi.superheroes,
+  },
+  transportation: {
+    label: 'Phương tiện giao thông',
+    words: categoryWordBankMapVi.transportation,
+  },
+  'video-games': {
+    label: 'Trò chơi điện tử',
+    words: categoryWordBankMapVi['video-games'],
+  },
+  'weather-nature': {
+    label: 'Thời tiết và thiên nhiên',
+    words: categoryWordBankMapVi['weather-nature'],
   },
 };
+
+const DEFAULT_CATEGORY_KEYS: CategoryKey[] = [
+  'daily-objects',
+  'celebrities',
+  'food-drinks',
+];
+
+const DEFAULT_PLAYERS = ['Người chơi 1', 'Người chơi 2', 'Người chơi 3'];
 
 const PASSWORD_STORAGE_KEY = 'imposter-unlocked';
 
@@ -36,11 +124,7 @@ function App() {
   const [isUnlocked, setIsUnlocked] = useState(() => {
     return window.localStorage.getItem(PASSWORD_STORAGE_KEY) === 'true';
   });
-  const [players, setPlayers] = useState([
-    'Người chơi 1',
-    'Người chơi 2',
-    'Người chơi 3',
-  ]);
+  const [players, setPlayers] = useState(DEFAULT_PLAYERS);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isDiscussionStarted, setIsDiscussionStarted] = useState(false);
   const [secretWord, setSecretWord] = useState('');
@@ -49,7 +133,9 @@ function App() {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [discussionStarterName, setDiscussionStarterName] =
     useState('Người chơi 1');
-  const [selectedCategory] = useState<CategoryKey>('daily-objects');
+  const [selectedCategories, setSelectedCategories] = useState<CategoryKey[]>(
+    DEFAULT_CATEGORY_KEYS,
+  );
   const [passwordForm] = Form.useForm();
 
   const handleConfirmPlayers = (nextPlayers: string[]) => {
@@ -66,6 +152,8 @@ function App() {
   const handleLogout = () => {
     setIsUnlocked(false);
     window.localStorage.removeItem(PASSWORD_STORAGE_KEY);
+    setPlayers(DEFAULT_PLAYERS);
+    setSelectedCategories(DEFAULT_CATEGORY_KEYS);
     setIsGameStarted(false);
     setIsDiscussionStarted(false);
     setCurrentPlayerIndex(0);
@@ -130,13 +218,19 @@ function App() {
   }
 
   const handleStartGame = () => {
-    const currentCategory = CATEGORY_SETTINGS[selectedCategory];
-    const randomIndex = Math.floor(Math.random() * currentCategory.words.length);
-    const selectedWord = currentCategory.words[randomIndex];
+    const wordPool = selectedCategories.flatMap(
+      (categoryKey) => CATEGORY_SETTINGS[categoryKey].words,
+    );
+
+    if (wordPool.length === 0) {
+      message.warning('Vui lòng chọn ít nhất một chủ đề');
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * wordPool.length);
+    const selectedWord = wordPool[randomIndex];
     const randomImposterIndex =
-      players.length > 1
-        ? 1 + Math.floor(Math.random() * (players.length - 1))
-        : 0;
+      players.length > 0 ? Math.floor(Math.random() * players.length) : 0;
 
     setSecretWord(selectedWord.word);
     setSecretHint(selectedWord.hint);
@@ -216,7 +310,21 @@ function App() {
             players={players}
             onConfirmPlayers={handleConfirmPlayers}
           />
-          <CategoryCard categoryLabel={CATEGORY_SETTINGS[selectedCategory].label} />
+          <CategoryCard
+            selectedCategoryLabels={selectedCategories.map(
+              (categoryKey) => CATEGORY_SETTINGS[categoryKey].label,
+            )}
+            selectedCategoryKeys={selectedCategories}
+            allCategories={(Object.keys(CATEGORY_SETTINGS) as CategoryKey[]).map(
+              (categoryKey) => ({
+                key: categoryKey,
+                label: CATEGORY_SETTINGS[categoryKey].label,
+              }),
+            )}
+            onConfirmCategories={(nextKeys) =>
+              setSelectedCategories(nextKeys as CategoryKey[])
+            }
+          />
           <ImposterCard playerCount={players.length} />
           <StartGameButton type="primary" onClick={handleStartGame}>
             Start Game
